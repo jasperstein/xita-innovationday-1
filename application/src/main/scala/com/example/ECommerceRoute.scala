@@ -30,7 +30,7 @@ class ECommerceActor extends Actor with ECommerceRoute with ClusterCartManagerAc
   //override val cartHandler = context.actorOf(cartHandlerProps, "cart-manager")
   def receive = runRoute(myRoute)
 
-  override val analyticsActor: ActorRef = Analytics(context.system)
+  override lazy val analyticsActor: ActorRef = Analytics(context.system)
 }
 
 // this trait defines our service behavior independently from the service actor
