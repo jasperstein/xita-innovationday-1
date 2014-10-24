@@ -23,7 +23,7 @@
         </ul>
        </p>
     </div>
-    <div class="col-md-10">
+    <div class="col-md-8">
       <!--Body content-->
 
       <ul class="phones" >
@@ -35,7 +35,15 @@
           
         </li>
       </ul>
- 
+    </div>
+    
+    <div class="col-md-2">
+		<ul class="list-group">
+	      <li class="list-group-item" ng-show="lastItems.length > 0"><strong>Last bought items</strong></li>
+ 			<li ng-repeat="lastItem in lastItems" class="list-group-item">
+        		  {{lastItem}}
+        		</li>
+        </ul>
     </div>
   </div>
 </div>

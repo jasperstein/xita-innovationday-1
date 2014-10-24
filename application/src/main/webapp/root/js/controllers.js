@@ -4,7 +4,7 @@
 
 var phonecatControllers = angular.module('phonecatControllers', []);
 
-phonecatControllers.controller('PhoneListCtrl', ['$scope', 'Phone', 'Cart', function($scope, Phone, Cart) {
+phonecatControllers.controller('PhoneListCtrl', ['$scope', 'Phone', 'Cart', 'Analytics', function($scope, Phone, Cart, Analytics) {
 	var self = this;
 	$scope.phones = Phone.query();
 	$scope.orderProp = 'age';
@@ -15,6 +15,9 @@ phonecatControllers.controller('PhoneListCtrl', ['$scope', 'Phone', 'Cart', func
 	$scope.removeFromCart = function(cartItem) {
 		Cart.remove(cartItem);
 	}
+	Analytics.fetchLastItems(function(data) {
+		$scope.lastItems = data;
+	});
   }]);
 
 phonecatControllers.controller('PhoneDetailCtrl', ['$scope', '$routeParams', 'Phone',

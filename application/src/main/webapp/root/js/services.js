@@ -78,4 +78,14 @@ phonecatServices.factory('Phone', [ '$resource', function($resource) {
 			clearCart();
 		}
 	}
+} ]).factory('Analytics', ['$http', '$interval', function ($http, $interval) {
+	return {
+		fetchLastItems : function(processLast10Items) {
+			$interval(function() {
+				$http.get('/last10items').success(function(data){
+					processLast10Items(data);
+				});
+			}, 5000);
+		}
+	}
 } ]);
