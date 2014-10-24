@@ -1,8 +1,6 @@
 package com.example
 
-import java.util.UUID
 import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
@@ -11,13 +9,13 @@ import akka.actor.ActorRef
 import akka.event.Logging
 import akka.util.Timeout
 import spray.http._
-import spray.http.MediaTypes._
 import spray.httpx.SprayJsonSupport._
 import spray.routing._
 import spray.routing.directives.LogEntry
 import akka.actor.Props
 import com.example.util.DirectiveExtensions
-
+import com.example.analytics.AnalyticsActor._
+import com.example.analytics.Analytics
 
 object ECommerceActor {
   //def props(cartHandlerProps: Props) = Props(new ECommerceActor(cartHandlerProps))
@@ -31,11 +29,15 @@ class ECommerceActor extends Actor with ECommerceRoute with ClusterCartManagerAc
   def actorRefFactory = context
   //override val cartHandler = context.actorOf(cartHandlerProps, "cart-manager")
   def receive = runRoute(myRoute)
+
+  override val analyticsActor: ActorRef = Analytics(context.system)
 }
 
 // this trait defines our service behavior independently from the service actor
-trait ECommerceRoute extends HttpService with StaticResources with Api {
+trait ECommerceRoute extends HttpService with StaticResources with Api with AnalyticsRoutes {
   val cartHandler: ActorRef
+  val analyticsActor: ActorRef
+
   def showPath(req: HttpRequest) = req.method match {
     case HttpMethods.POST => LogEntry("Method = %s, Path = %s, Data = %s" format (req.method, req.uri, req.entity), Logging.InfoLevel)
     case _ => LogEntry("Method = %s, Path = %s" format (req.method, req.uri), Logging.InfoLevel)
@@ -43,7 +45,7 @@ trait ECommerceRoute extends HttpService with StaticResources with Api {
 
   val myRoute =
     logRequest(showPath _) {
-      shoppingCartRoutes ~ staticResources
+      shoppingCartRoutes ~ analyticsRoutes ~ staticResources
     }
 }
 
@@ -101,6 +103,26 @@ trait Api extends HttpService with DirectiveExtensions{
     }
   }
   private def completeWithError(e: Throwable) = complete(StatusCodes.InternalServerError, e.getMessage())
+
+}
+
+trait AnalyticsRoutes extends HttpService with DirectiveExtensions {
+  import akka.pattern.ask
+  import ExecutionContext.Implicits.global
+
+  val analyticsActor: ActorRef
+
+  val analyticsRoutes = {
+    path("last10items") {
+      get {
+        val last10Items = (analyticsActor.ask(LastAdded)(10 seconds)).mapTo[LastItems]
+        onComplete(last10Items) {
+          case Success(resLast10Items)    => complete(resLast10Items)
+          case Failure(e)                 => complete(StatusCodes.InternalServerError, e.getMessage())
+        }
+      }
+    }
+  }
 
 }
 
