@@ -1,5 +1,7 @@
 package com.example
 
+import spray.routing
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.Failure
@@ -115,15 +117,18 @@ trait AnalyticsRoutes extends HttpService with DirectiveExtensions {
   val analyticsRoutes = {
     path("last10items") {
       get {
-        val last10Items = (analyticsActor.ask(LastAdded)(10 seconds)).mapTo[LastItems]
-        onComplete(last10Items) {
-          case Success(resLast10Items)    => complete(resLast10Items)
-          case Failure(e)                 => complete(StatusCodes.InternalServerError, e.getMessage())
-        }
+        last10itemsRoute
       }
     }
   }
 
+  def last10itemsRoute: routing.Route = {
+    def last10Items = (analyticsActor.ask(LastAdded)(10 seconds)).mapTo[LastItems]
+    onComplete(last10Items) {
+      case Success(resLast10Items) => complete(resLast10Items)
+      case Failure(e) => complete(StatusCodes.InternalServerError, e.getMessage())
+    }
+  }
 }
 
 // Trait for serving static resources

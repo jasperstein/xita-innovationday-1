@@ -32,8 +32,8 @@ class AnalyticsActor extends Actor {
 
   override def receive: Receive = {
     case sa@SubscribeAck(_) => println(s"subscribed: '$uuid' - $sa")
-    case ItemAddedEvent(id) => updateLastAdded(id)
-    case LastAdded => sender ! LastItems(lastAddedItems)
+    case msg@ItemAddedEvent(id) => println("iae" + msg) ; updateLastAdded(id)
+    case msg@LastAdded => println("lastadded" + sender() + msg) ; sender ! LastItems(lastAddedItems)
     case m@_ => println(s"analytics actor '$uuid' - message unhandled: $m")
   }
 
