@@ -26,19 +26,19 @@ class AnalyticsActor extends Actor {
 
   val mediator = DistributedPubSubExtension(context.system).mediator
   val maxLastAddedItems = 10
-  var lastAddedItems = Seq.empty[String]
+  var lastAddedItems = Set.empty[String]
 
   override def preStart() = mediator ! Subscribe(topic, None, self)
 
   override def receive: Receive = {
     case sa@SubscribeAck(_) => println(s"subscribed: '$uuid' - $sa")
     case msg@ItemAddedEvent(id) => println("iae" + msg) ; updateLastAdded(id)
-    case msg@LastAdded => println("lastadded" + sender() + msg) ; sender ! LastItems(lastAddedItems)
+    case msg@LastAdded => println("lastadded" + sender() + msg) ; sender ! LastItems(lastAddedItems.toSeq)
     case m@_ => println(s"analytics actor '$uuid' - message unhandled: $m")
   }
 
   private def updateLastAdded(id: String) = {
-    lastAddedItems = id +: lastAddedItems
+    lastAddedItems = lastAddedItems + id
     if (lastAddedItems.size > maxLastAddedItems) {
       lastAddedItems = lastAddedItems.init
     }

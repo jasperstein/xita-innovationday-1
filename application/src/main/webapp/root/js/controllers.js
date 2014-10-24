@@ -16,7 +16,7 @@ phonecatControllers.controller('PhoneListCtrl', ['$scope', 'Phone', 'Cart', 'Ana
 		Cart.remove(cartItem);
 	}
 	Analytics.fetchLastItems(function(data) {
-		$scope.lastItems = data;
+		$scope.lastItems = data.items;
 	});
   }]);
 
